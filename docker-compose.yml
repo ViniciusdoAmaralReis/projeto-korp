@@ -1,12 +1,12 @@
+version: '3.8'
+
 networks:
   korp-net:
     driver: bridge
 
 services:
   http-server:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    build: ./app
     container_name: http-server-projeto-korp
     networks:
       - korp-net
@@ -46,3 +46,4 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: unless-stopped
+EOF
