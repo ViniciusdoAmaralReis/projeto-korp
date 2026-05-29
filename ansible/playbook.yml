@@ -11,7 +11,7 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instalar Docker
+    - name: Instalar Docker e dependências
       apt:
         name:
           - docker.io
@@ -19,22 +19,16 @@
           - rsync
         state: present
 
-    - name: Instalar Docker Compose plugin (v2)
+    - name: Instalar Docker Compose plugin v2
       apt:
         name: docker-compose-v2
         state: present
 
-    - name: Criar alias para docker compose (opcional)
-      file:
-        src: /usr/libexec/docker/cli-plugins/docker-compose
-        dest: /usr/local/bin/docker-compose
-        state: link
-
-    - name: Iniciar e habilitar Docker
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
+    - name: Adicionar usuário ao grupo docker
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
 
     - name: Criar diretório do projeto
       file:
@@ -63,7 +57,7 @@
         recursive: yes
         delete: no
 
-    - name: Copiar docker-compose.yml
+    - name: Copiar docker-compose.yml (sem version)
       copy:
         src: ../docker-compose.yml
         dest: "{{ project_dir }}/docker-compose.yml"
@@ -76,19 +70,16 @@
           path: "{{ project_dir }}/app"
         source: build
         state: present
+      become: yes
 
-    - name: Remover ambiente anterior (para garantir consistência)
-      docker_compose:
-        project_src: "{{ project_dir }}"
-        state: absent
-        remove_volumes: yes
+    - name: Parar e remover containers anteriores (se existirem)
+      command: docker compose -f {{ project_dir }}/docker-compose.yml down
       ignore_errors: yes
+      become: yes
 
-    - name: Executar docker-compose up
-      docker_compose:
-        project_src: "{{ project_dir }}"
-        state: present
-        restarted: yes
+    - name: Subir containers com docker compose
+      command: docker compose -f {{ project_dir }}/docker-compose.yml up -d
+      become: yes
 
     - name: Aguardar serviço responder
       uri:
