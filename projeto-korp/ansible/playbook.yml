@@ -1,0 +1,99 @@
+---
+- name: Provisionar ambiente do Projeto Korp
+  hosts: localhost
+  become: yes
+  vars:
+    project_dir: /opt/projeto-korp
+
+  tasks:
+    - name: Atualizar cache apt
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar Docker, curl e rsync
+      apt:
+        name:
+          - docker.io
+          - curl
+          - rsync
+        state: present
+
+    - name: Instalar Docker Compose (standalone)
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Iniciar e habilitar Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Criar diretório do projeto
+      file:
+        path: "{{ project_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copiar código fonte (app)
+      synchronize:
+        src: ../app/
+        dest: "{{ project_dir }}/app"
+        recursive: yes
+        delete: no
+
+    - name: Copiar configuração do Nginx
+      synchronize:
+        src: ../nginx/
+        dest: "{{ project_dir }}/nginx"
+        recursive: yes
+        delete: no
+
+    - name: Copiar configuração do Prometheus
+      synchronize:
+        src: ../prometheus/
+        dest: "{{ project_dir }}/prometheus"
+        recursive: yes
+        delete: no
+
+    - name: Copiar docker-compose.yml
+      copy:
+        src: ../docker-compose.yml
+        dest: "{{ project_dir }}/docker-compose.yml"
+        mode: '0644'
+
+    - name: Construir imagem Docker do servidor Go
+      docker_image:
+        name: http-server-projeto-korp
+        build:
+          path: "{{ project_dir }}/app"
+        source: build
+        state: present
+
+    - name: Remover ambiente anterior (para garantir consistência)
+      docker_compose:
+        project_src: "{{ project_dir }}"
+        state: absent
+        remove_volumes: yes
+      ignore_errors: yes
+
+    - name: Executar docker-compose up
+      docker_compose:
+        project_src: "{{ project_dir }}"
+        state: present
+        restarted: yes
+
+    - name: Aguardar serviço responder
+      uri:
+        url: http://localhost/projeto-korp
+        status_code: 200
+        return_content: yes
+      register: health_check
+      until: health_check.status == 200
+      retries: 10
+      delay: 5
+
+    - name: Exibir resposta do serviço
+      debug:
+        msg: "Resposta do serviço: {{ health_check.content }}"
