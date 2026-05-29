@@ -11,7 +11,7 @@
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: Instalar Docker, curl e rsync
+    - name: Instalar Docker
       apt:
         name:
           - docker.io
@@ -19,10 +19,16 @@
           - rsync
         state: present
 
-    - name: Instalar Docker Compose (standalone)
+    - name: Instalar Docker Compose plugin (v2)
       apt:
-        name: docker-compose
+        name: docker-compose-v2
         state: present
+
+    - name: Criar alias para docker compose (opcional)
+      file:
+        src: /usr/libexec/docker/cli-plugins/docker-compose
+        dest: /usr/local/bin/docker-compose
+        state: link
 
     - name: Iniciar e habilitar Docker
       systemd:
