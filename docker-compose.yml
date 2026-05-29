@@ -6,7 +6,9 @@ networks:
 
 services:
   http-server:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile
     container_name: http-server-projeto-korp
     networks:
       - korp-net
