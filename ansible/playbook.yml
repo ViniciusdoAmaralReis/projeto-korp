@@ -6,6 +6,12 @@
     project_dir: /opt/projeto-korp
 
   tasks:
+    - name: Instalar coleção community.docker
+      command: ansible-galaxy collection install community.docker
+      args:
+        creates: ~/.ansible/collections/ansible_collections/community/docker
+      ignore_errors: yes
+
     - name: Atualizar cache apt
       apt:
         update_cache: yes
@@ -71,12 +77,14 @@
         source: build
         state: present
 
-    - name: Subir containers com Docker Compose
-      community.docker.docker_compose:
+    - name: Subir containers com Docker Compose (v2)
+      community.docker.docker_compose_v2:
         project_src: "{{ project_dir }}"
-        files: docker-compose.yml
+        files:
+          - docker-compose.yml
         state: present
-        restarted: yes
+        recreate: always
+      become: yes
 
     - name: Aguardar serviço responder
       uri:
