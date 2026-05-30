@@ -6,21 +6,6 @@
     project_dir: /opt/projeto-korp
 
   tasks:
-    - name: Remover requiretty do sudoers (para permitir non-interactive sudo)
-      lineinfile:
-        path: /etc/sudoers
-        regexp: '^Defaults\s+requiretty'
-        state: absent
-        validate: 'visudo -cf %s'
-      ignore_errors: yes
-
-    - name: Garantir que o usuário tenha permissão sudo sem senha (opcional, para evitar prompts)
-      lineinfile:
-        path: /etc/sudoers
-        line: "{{ ansible_user }} ALL=(ALL) NOPASSWD: ALL"
-        validate: 'visudo -cf %s'
-      ignore_errors: yes
-
     - name: Atualizar cache apt
       apt:
         update_cache: yes
@@ -86,12 +71,12 @@
         source: build
         state: present
 
-    - name: Parar e remover containers anteriores (se existirem)
-      command: docker compose -f {{ project_dir }}/docker-compose.yml down
-      ignore_errors: yes
-
     - name: Subir containers com Docker Compose
-      command: docker compose -f {{ project_dir }}/docker-compose.yml up -d
+      community.docker.docker_compose:
+        project_src: "{{ project_dir }}"
+        files: docker-compose.yml
+        state: present
+        restarted: yes
 
     - name: Aguardar serviço responder
       uri:
