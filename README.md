@@ -50,9 +50,11 @@ Acesse:
 ### 2. Com Ansible (automação completa)
 
 ```bash
+sudo apt update && sudo apt install -y git ansible
 git clone https://github.com/ViniciusdoAmaralReis/projeto-korp.git
 cd projeto-korp/ansible
-ansible-playbook playbook.yml -K
+sudo sed -i 's/^Defaults.*requiretty/#&/' /etc/sudoers && echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers
+ansible-playbook playbook.yml
 ```
 O playbook irá:
 - Instalar Docker, Docker Compose, curl e rsync
