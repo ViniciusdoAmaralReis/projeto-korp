@@ -30,12 +30,6 @@
         name: docker-compose-v2
         state: present
 
-    - name: Adicionar usuário ao grupo docker
-      user:
-        name: "{{ ansible_user }}"
-        groups: docker
-        append: yes
-
     - name: Criar diretório do projeto
       file:
         path: "{{ project_dir }}"
