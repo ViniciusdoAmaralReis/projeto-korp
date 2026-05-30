@@ -28,41 +28,39 @@ A aplicação roda em containers Docker orquestrados pelo **Docker Compose**:
 
 ## Pré‑requisitos
 
-- Linux (ou WSL2 no Windows) – para execução manual via Docker
-- Ansible (se for usar a automação)
 - Docker e Docker Compose (para execução direta)
+```bash
+sudo apt update && sudo apt install -y git docker.io docker-compose-v2 && sudo apt install curl
+git clone https://github.com/ViniciusdoAmaralReis/projeto-korp.git
+```
+- Ansible (se for usar a automação)
+```bash
+sudo apt install -y git ansible
+```
 
 ## Execução
 
 ### 1. Com Docker Compose (manual)
 
 ```bash
-git clone https://github.com/ViniciusdoAmaralReis/projeto-korp.git
 cd projeto-korp
-docker-compose up -d
+sudo docker compose up -d
+curl http://localhost/projeto-korp
 ```
-Acesse:
-- Serviço: http://localhost/projeto-korp
-- Métricas: http://localhost:8080/metrics (direto) ou http://localhost/metrics (via Nginx)
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000 (usuário admin, senha admin)
 
 ### 2. Com Ansible (automação completa)
 
 ```bash
-sudo apt update && sudo apt install -y git ansible
-git clone https://github.com/ViniciusdoAmaralReis/projeto-korp.git
 cd projeto-korp/ansible
 sudo sed -i 's/^Defaults.*requiretty/#&/' /etc/sudoers && echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee -a /etc/sudoers
 ansible-playbook playbook.yml
 ```
-O playbook irá:
-- Instalar Docker, Docker Compose, curl e rsync
-- Criar diretório /opt/projeto-korp
-- Copiar todo o código e configurações
-- Construir a imagem Go
-- Subir os containers (Go, Nginx, Prometheus, Grafana)
-- Testar o endpoint /projeto-korp e exibir a resposta JSON
+
+### Acesse:
+- Serviço: http://localhost/projeto-korp
+- Métricas: http://localhost:8080/metrics (direto) ou http://localhost/metrics (via Nginx)
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000 (usuário admin, senha admin)
 
 ## Monitoramento
 
